@@ -1,0 +1,17 @@
+{
+   //
+   // 説明:
+   // 等間隔に文字が並んでいることを前提にした
+   // 画像の切り取り方法を表す
+   //
+
+   // 画像のマージン(上側・左側)
+   "margin-top": 2,
+   "margin-left": 2,
+   // 文字と文字の間隔(左右・上下)
+   "char-margin-horizontal": 3,
+   "char-margin-vertical": 3,
+   // 1文字の大きさ(幅・高さ)
+   "char-width": 7,
+   "char-height": 7
+}
