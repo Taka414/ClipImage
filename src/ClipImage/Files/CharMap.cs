@@ -34,19 +34,20 @@ namespace Takap.Tools.Imaging
             string[] lines = File.ReadAllLines(filePath);
 
             var map = new CharMap();
-            for (int i = 0; i < lines.Length; i++)
+            foreach (var line in lines)
             {
+                string trimedLine = line.Trim();
+                if (string.IsNullOrEmpty(trimedLine) || trimedLine.StartsWith("!"))
+                {
+                    continue; // コメント行、空行の読み飛ばし
+                }
+
                 var subList = new List<char>();
                 map.items.Add(subList);
 
-                string[] parts = lines[i].Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                string[] parts = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                 for (int p = 0; p < parts.Length; p++)
                 {
-                    if (parts[p] == "SP") // SPは空白扱いにする
-                    {
-                        parts[p] = " ";
-                    }
-
                     subList.Add(parts[p][0]);
                 }
             }

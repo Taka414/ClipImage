@@ -38,7 +38,7 @@ namespace Takap.Tools.Imaging
             string imagePath = args[2];
             param.ImagePath = imagePath;
 
-            // 出力先は画像パスと同じ場所に子フォルダを作成
+            // 出力先は画像パスと同じ場所に子フォルダを作成(固定)
             string parentDir = Path.GetDirectoryName(imagePath);
             string subDir = Path.GetFileNameWithoutExtension(imagePath);
             string destPath = Path.Combine(parentDir, subDir);

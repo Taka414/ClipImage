@@ -17,17 +17,17 @@ namespace Takap.Tools.Imaging
         [DataMember(Name = "margin-left")]
         public int MarginLeft { get; set; }
 
-        [DataMember(Name = "char-margin-horizontal")]
-        public int CharMarginHorizontal { get; set; }
-
         [DataMember(Name = "char-margin-vertical")]
         public int CharMarginVertical { get; set; }
 
-        [DataMember(Name = "char-width")]
-        public int CharWidth { get; set; }
-
         [DataMember(Name = "char-height")]
         public int CharHeight { get; set; }
+
+        [DataMember(Name = "needs-space-img")]
+        public bool NeedsSpace { get; set; }
+
+        [DataMember(Name = "space-width")]
+        public int SpaceWidth { get; set; }
 
         // 指定したファイルパスからオブジェクトを作成する
         public static Settings Load(string filePath)

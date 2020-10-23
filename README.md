@@ -25,14 +25,20 @@
 // Setting.json
 
 {
-   "margin-top": 20,   // (1) 画像の上部の余白(px)
-   "margin-left": 20,  // (2) 画像の左側の余白(px)
-   "char-margin-horizontal": 30, // 文字の横幅(px, 等幅)
-   "char-margin-vertical": 30,   // 文字の縦幅(px, 等幅)
-   "char-width": 70,   // 文字と文字の横の間隔(ox)
-   "char-height": 70   // 文字と文字の縦の間隔(px)
+  "margin-top": 2,           // (1) 画像の上部の余白(px)
+  "margin-left": 2,          // (2) 画像の左側の余白(px)
+  "char-margin-vertical": 3, // (4) 1行の間隔(px)
+  "char-height": 7,          // (6) 1文字の固定高さ(px)
+  
+  // スペースを画像として生成するかどうか
+  // true : 生成する / false : しない
+  "needs-space-img": true,
+  // スペースの横幅
+  "space-width": 4
 }
 ```
+
+(3) と (5) はツールが自動で識別して分割を行います。
 
 ### キャラクターマップ
 

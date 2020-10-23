@@ -2,7 +2,9 @@
 // (c) 2020 Takap.
 //
 
+using System;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 
 namespace Takap.Tools.Imaging
@@ -35,6 +37,7 @@ namespace Takap.Tools.Imaging
 
             for (int y = 0; true; y++)
             {
+                // 1行の高さは固定
                 int ypos = param.Setting.MarginTop;
                 if (y != 0)
                 {
@@ -46,80 +49,122 @@ namespace Takap.Tools.Imaging
                     break;
                 }
 
-                for (int x = 0; true; x++)
+                int x = 0;
+                for (int xpos = param.Setting.MarginLeft; xpos < param.SourceBitmap.Width;)
                 {
-                    int xpos = param.Setting.MarginLeft;
-                    if (x != 0)
-                    {
-                        xpos += (param.Setting.CharWidth + param.Setting.CharMarginHorizontal) * x;
-                    }
-
-                    if (xpos > param.SourceBitmap.Width)
+                    if (!getRectangle(param.SourceBitmap, xpos, ypos, param.Setting.CharHeight, out Rectangle rect))
                     {
                         break;
                     }
 
+                    Console.WriteLine(rect.ToString());
+
                     // 対応する
-                    if (!param.CharMap.TryGetChar(x, y, out char _c))
+                    if (!param.CharMap.TryGetChar(x++, y, out char _c))
                     {
-                        continue;
+                        break;
                     }
 
-                    // 等幅と仮定して切り抜く
-                    var rect = new Rectangle(xpos, ypos, param.Setting.CharWidth, param.Setting.CharHeight);
-                    Bitmap clipedBmp = param.SourceBitmap.Clone(rect, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                    // 画像から領域を切り抜居て保存
+                    Bitmap clipedBmp = param.SourceBitmap.Clone(rect, PixelFormat.Format32bppArgb);
+                    clipedBmp.Save(createSavePath(param, _c));
 
-                    if (_c != ' ')
-                    {
-                        // 横幅の空白を削除する(高さはそのまま)
-                        int left = filndLeft(clipedBmp);
-                        int right = findRight(clipedBmp);
-                        var rect2 = new Rectangle(left, 0, clipedBmp.Width - left - (clipedBmp.Width - 1 - right), clipedBmp.Height);
-                        if (rect2.Width != rect.Width)
-                        {
-                            clipedBmp = clipedBmp.Clone(rect2, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                        }
-                    }
-
-                    // ファイル名は16進数 Asciiコード
-                    string fileName = ((byte)_c).ToString("X");
-                    clipedBmp.Save(Path.Combine(param.DestDir, fileName + ".png"));
+                    xpos = rect.X + rect.Width;
                 }
+            }
+
+            // 空白文字を生成
+            if (param.Setting.NeedsSpace)
+            {
+                var bmp = createSpace(param.Setting.SpaceWidth, param.Setting.CharHeight);
+                bmp.Save(createSavePath(param, ' '));
             }
         }
 
-        // 左からの有効なピクセル開始位置
-        private static int filndLeft(Bitmap bmp)
+        // 指定した位置から左方向に走査して有効なビットマップ中の有効な文字領域を取得する
+        // true : 矩形を選択できた / false : それ以外(右端に到達)
+        private static bool getRectangle(Bitmap bmp, int x, int y, int height, out Rectangle rect)
         {
-            for (int x = 0; x < bmp.Width; x++)
+            int beginX = x;
+            int width = 1;
+            rect = new Rectangle();
+
+            // 開始位置の検索
+            for (int xp = x; xp < bmp.Width; xp++, beginX++)
             {
-                for (int y = 0; y < bmp.Height; y++)
+                if (isValidPixel(bmp, xp, y, height))
                 {
-                    var c = bmp.GetPixel(x, y);
-                    if (c.A != 0)
-                    {
-                        return x; // 半透明のピクセルが見つかれば有効とする
-                    }
+                    break;
                 }
             }
-            return 0;
+
+            if (beginX >= bmp.Width)
+            {
+                return false;
+            }
+
+            // 幅の選択
+            for (int xp = beginX + 1; xp < bmp.Width; xp++, width++)
+            {
+                if (!isValidPixel(bmp, xp, y, height))
+                {
+                    break;
+                }
+            }
+
+            if (x + width >= bmp.Width)
+            {
+                return false;
+            }
+
+            rect.X = beginX;
+            rect.Y = y;
+            rect.Width = width;
+            rect.Height = height;
+
+            return true;
         }
 
-        // 右からの有効なピクセル開始位置
-        private static int findRight(Bitmap bmp)
+        // 指定した位置を上端として下側にheight分の範囲に有効な行が存在するかどうか確認する
+        // true : 存在する / false : それ以外
+        //   0 1 2
+        // 0 0 0 a ↓ こういう方向で検索する 
+        // 1 0 0 a ↓
+        // 2 0 0 a ↓
+        private static bool isValidPixel(Bitmap bmp, int x, int y, int height)
         {
-            for (int x = bmp.Width - 1; x >= 0; x--)
+            for (int yp = 0; yp < height; yp++)
             {
-                for (int y = bmp.Height - 1; y >= 0; y--)
+                var c = bmp.GetPixel(x, y + yp);
+                if (c.A != 0)
                 {
-                    var c = bmp.GetPixel(x, y);
-                    if (c.A != 0)
-                    {
-                        return x;
-                    }
+                    return true; // 不透明ピクセルは有効
                 }
             }
-            return 0;
+            return false;
+        }
+
+        // 画像の保存パスを作成する
+        private static string createSavePath(Args param, char c)
+        {
+            string fileName = ((byte)c).ToString("X"); // ファイル名は16進数 Asciiコード
+            string path = Path.Combine(param.DestDir, fileName + ".png");
+            Console.WriteLine($"{c} -> {Path.GetFileName(path)}");
+            return path;
+        }
+
+        // 空白文字を画像として生成する
+        private static Bitmap createSpace(int width, int height)
+        {
+            var bmp = new Bitmap(width, height);
+            for (int y = 0; y < height; y++)
+            {
+                for (int x = 0; x < width; x++)
+                {
+                    bmp.SetPixel(x, y, Color.FromArgb(255, 0, 0, 0));
+                }
+            }
+            return bmp;
         }
     }
 }
