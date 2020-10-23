@@ -156,12 +156,12 @@ namespace Takap.Tools.Imaging
         // 空白文字を画像として生成する
         private static Bitmap createSpace(int width, int height)
         {
-            var bmp = new Bitmap(width, height);
+            var bmp = new Bitmap(width, height, PixelFormat.Format32bppArgb);
             for (int y = 0; y < height; y++)
             {
                 for (int x = 0; x < width; x++)
                 {
-                    bmp.SetPixel(x, y, Color.FromArgb(255, 0, 0, 0));
+                    bmp.SetPixel(x, y, Color.FromArgb(0, 0, 0, 0));
                 }
             }
             return bmp;
